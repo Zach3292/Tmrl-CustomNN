@@ -17,7 +17,9 @@ def clear():
 env = get_environment()  # retrieve the TMRL Gym environment
 
 # row = different state aka array of 4 lidar value, columns = different action aka [gas, break, steer], analog between -1.0 and +1.0
-q_table = np.zeros(["lidar value array", "action array"])
+
+# for now we'll only try to make the car steer so 3 simple state with lidar to see if the road is straight ahead, right or left and 3 simple action for straight, right and left
+q_table = np.zeros([3, 3])
 
 
 training_episodes = 20000 # Amount of times to run environment while training.
@@ -43,7 +45,7 @@ for i in range(training_episodes):
     
     while not term:
         if random.uniform(0, 1) < epsilon:
-            action = np.array([random.uniform(-1, 1), random.uniform(-1, 1), random.uniform([-1, 1])]) # Pick a new action for this state.
+            action = np.array([1.0, 0, random.uniform([-1, 1])]) # Pick a new action for this state.
         else:
             action = np.argmax(q_table[obs]) # Pick the action which has previously given the highest reward.
 

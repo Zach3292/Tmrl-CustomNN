@@ -113,7 +113,7 @@ for _ in range(display_episodes):
         state = obsToState(obs)
 
         action = np.argmax(q_table[state])
-        obs, rew, term, trun, info = env.step(action) 
+        obs, rew, term, trun, info = env.step(np.array([1.0, 0, (action -1)])) 
 
         if rew == -10:
             penalties += 1

@@ -73,12 +73,12 @@ for i in range(training_episodes):
         state = obsToState(obs)
 
         if random.uniform(0, 1) < epsilon:
-            action = np.array([1.0, 0, random.uniform([-1, 1])]) # Pick a new action for this state.
+            action = round(random.uniform([0, 2])) # Pick a new action for this state.
         else:
-            action = np.array([1.0, 0, (np.argmax(q_table[state])) - 1]) # Pick the action which has previously given the highest reward.
+            action = np.argmax(q_table[state]) # Pick the action which has previously given the highest reward.
         
 
-        next_obs, rew, term, trun, info = env.step(action) 
+        next_obs, rew, term, trun, info = env.step(np.array([1.0, 0, (action -1)])) 
 
         next_state = obsToState(next_obs)
         

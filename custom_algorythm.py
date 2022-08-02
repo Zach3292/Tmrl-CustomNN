@@ -5,7 +5,6 @@ from os import system, name
 import numpy as np
 import random
 
-from torch import round_
 
 def clear(): 
   
@@ -21,11 +20,8 @@ env = get_environment()  # retrieve the TMRL Gym environment
 
 # row = different state aka array of 4 lidar value, columns = different action aka [gas, break, steer], analog between -1.0 and +1.0
 
-# for now we'll only try to make the car steer so 3 simple state with lidar to see if the road is straight ahead, right or left and 3 simple action for straight, right and left
-q_table = np.zeros([3, 3])
-# 0 = left
-# 1 = nothing
-# 2 = right
+# the 20001 state are representing a sterring value from 0 to 2 with 4 decimal point and the 3 simple action for straight, right and left
+q_table = np.zeros([201, 201])
 
 training_episodes = 20000 # Amount of times to run environment while training.
 display_episodes = 10 # Amount of times to run environment after training.
@@ -33,7 +29,7 @@ display_episodes = 10 # Amount of times to run environment after training.
 # Hyperparameters
 alpha = 0.1 # Learning Rate
 gamma = 0.6 # Discount Rate
-epsilon = 0.1 # Chance of selecting a random action instead of maximising reward.
+epsilon = 0.25 # Chance of selecting a random action instead of maximising reward.
 
 # For plotting metrics
 all_epochs = []
@@ -54,8 +50,9 @@ def obsToState(obs):
         steer += (i - 9) * deviation[i]
     steer = - np.tanh(steer * 4)
     steer = min(max(steer, -1.0), 1.0)
-
-    state = round(steer) + 1  # To transform the deviation into the 3 state of the array
+    state = round(steer, 3) + 1  # To transform the deviation into the 20001 state of the array
+    state *= 100
+    state = int(state)
     return state
 
 """Training the Agent"""
@@ -69,16 +66,15 @@ for i in range(training_episodes):
     penalties, rew, = 0, 0
     
     while not term:
-
-
+        
 
         if random.uniform(0, 1) < epsilon:
-            action = round(random.uniform(0, 2)) # Pick a new action for this state.
+            action = round(random.uniform(0, 200)) # Pick a new action for this state.
         else:
             action = np.argmax(q_table[state]) # Pick the action which has previously given the highest reward.
         
 
-        next_obs, rew, term, info = env.step(np.array([1.0, 0, (action -1)])) 
+        next_obs, rew, term, info = env.step(np.array([1.0, 0, (action/100)-1])) 
 
         next_state = obsToState(next_obs)
         
@@ -94,9 +90,13 @@ for i in range(training_episodes):
 
         state = next_state
 
-        
-    if i % 1 == 0: # Output number of completed episodes every 100 episodes.
+        clear()
         print(f"Episode: {i}")
+        print(f"State: {state}")
+        print(f"Action: {action}")
+        print(f"Reward: {rew}")
+
+
 
 print("Training finished.\n")
 
@@ -114,7 +114,7 @@ for _ in range(display_episodes):
         state = obsToState(obs)
 
         action = np.argmax(q_table[state])
-        obs, rew, term, info = env.step(np.array([1.0, 0, (action -1)])) 
+        obs, rew, term, info = env.step(np.array([1.0, 0, (action/100)-1])) 
 
         if rew == 0:
             penalties += 1

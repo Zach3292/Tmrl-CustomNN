@@ -69,16 +69,31 @@ for i in range(training_episodes):
     
     while not term:
 
-
         state = obsToState(obs)
 
+        print(state)       
+
+        # -------------BIG ISSUE!!----------------- 
+        # State is always 1 no matter what the position of the car is
+        #
+        # When looking at the output of the steer variable in the obsToState function, 1/2 of the time, the 
+        # value is 0.0044 making it round to zero + 1 meaning the state is 1/2 of the time equal to 1 in the  
+        # function but when looking at the state here, it is always one, this 1/2 0.0044 value of the steer 
+        # variable can be tracked all the way up to the deviation array that contain 1/2 the time exactly the 
+        # same array value for some reason I don't know
+        #
+        # We need a way to only use the good value and discard the other one while allowing the training to 
+        # not stop when we discard said value
+        #------------------------------------------
+
+
         if random.uniform(0, 1) < epsilon:
-            action = round(random.uniform([0, 2])) # Pick a new action for this state.
+            action = round(random.uniform(0, 2)) # Pick a new action for this state.
         else:
             action = np.argmax(q_table[state]) # Pick the action which has previously given the highest reward.
         
 
-        next_obs, rew, term, trun, info = env.step(np.array([1.0, 0, (action -1)])) 
+        next_obs, rew, term, info = env.step(np.array([1.0, 0, (action -1)])) 
 
         next_state = obsToState(next_obs)
         
@@ -89,12 +104,12 @@ for i in range(training_episodes):
         new_value = (1 - alpha) * old_value + alpha * (rew + gamma * next_max)
         q_table[state, action] = new_value
 
-        if rew == -10: # Checks if agent attempted to do an illegal action.
+        if rew == 0: # Checks if agent attempted to do an illegal action or bad action.
             penalties += 1
 
         state = next_state
         
-    if i % 100 == 0: # Output number of completed episodes every 100 episodes.
+    if i % 1 == 0: # Output number of completed episodes every 100 episodes.
         print(f"Episode: {i}")
 
 print("Training finished.\n")
@@ -113,9 +128,9 @@ for _ in range(display_episodes):
         state = obsToState(obs)
 
         action = np.argmax(q_table[state])
-        obs, rew, term, trun, info = env.step(np.array([1.0, 0, (action -1)])) 
+        obs, rew, term, info = env.step(np.array([1.0, 0, (action -1)])) 
 
-        if rew == -10:
+        if rew == 0:
             penalties += 1
 
         epochs += 1

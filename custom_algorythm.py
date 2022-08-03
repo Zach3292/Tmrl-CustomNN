@@ -1,9 +1,12 @@
-from ast import If
 from tmrl import get_environment
 from time import sleep
 from os import system, name
 import numpy as np
 import random
+
+# local imports
+from tmrl.custom.utils.window import WindowInterface
+from tmrl.custom.utils.tools import Lidar
 
 
 def clear(): 
@@ -17,6 +20,9 @@ def clear():
         _ = system('clear')
 
 env = get_environment()  # retrieve the TMRL Gym environment
+
+window_interface = WindowInterface("Trackmania")
+lidar = Lidar(window_interface.screenshot())
 
 # row = different state aka array of 4 lidar value, columns = different action aka [gas, break, steer], analog between -1.0 and +1.0
 
@@ -57,6 +63,8 @@ def obsToState(obs):
 
 """Training the Agent"""
 
+
+
 sleep(1.0)
 
 for i in range(training_episodes):
@@ -67,6 +75,8 @@ for i in range(training_episodes):
     
     while not term:
         
+        img = window_interface.screenshot()[:, :, :3] # Display Live Lidar on screen
+        lidar.lidar_20(img, True)
 
         if random.uniform(0, 1) < epsilon:
             action = round(random.uniform(0, 200)) # Pick a new action for this state.

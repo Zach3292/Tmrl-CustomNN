@@ -3,10 +3,14 @@ from time import sleep
 from os import system, name
 import numpy as np
 import random
+import os
 
 # local imports
 from tmrl.custom.utils.window import WindowInterface
 from tmrl.custom.utils.tools import Lidar
+
+data_path = "C:\\Users\\Zach\\Documents\\001 TMRL\\nparray"
+created_folder = "C:\\Users\\Zach\\Documents\\001 TMRL\\nparray"
 
 
 def clear(): 
@@ -27,7 +31,13 @@ lidar = Lidar(window_interface.screenshot())
 # row = different state aka array of 4 lidar value, columns = different action aka [gas, break, steer], analog between -1.0 and +1.0
 
 # the 20001 state are representing a sterring value from 0 to 2 with 4 decimal point and the 3 simple action for straight, right and left
-q_table = np.zeros([201, 201])
+
+if os.path.isfile("C:\\Users\\Zach\\Documents\\001 TMRL\\nparray\\neuralNetwork.npy"):
+    q_table = np.load("C:\\Users\\Zach\\Documents\\001 TMRL\\nparray\\neuralNetwork.npy")
+else:
+    q_table = np.zeros([201, 201])
+
+
 
 training_episodes = 20000 # Amount of times to run environment while training.
 display_episodes = 10 # Amount of times to run environment after training.
@@ -56,7 +66,7 @@ def obsToState(obs):
         steer += (i - 9) * deviation[i]
     steer = - np.tanh(steer * 4)
     steer = min(max(steer, -1.0), 1.0)
-    state = round(steer, 3) + 1  # To transform the deviation into the 20001 state of the array
+    state = round(steer, 3) + 1  # To transform the deviation into the 201 state of the array
     state *= 100
     state = int(state)
     return state
@@ -94,6 +104,11 @@ for i in range(training_episodes):
         # Update q-value for current state.
         new_value = (1 - alpha) * old_value + alpha * (rew + gamma * next_max)
         q_table[state, action] = new_value
+
+        path = os.path.join(data_path, created_folder, 'neuralNetwork')
+        with open('{}.npy'.format(path), 'wb') as f:
+            np.save(f, q_table)
+
 
         if rew == 0: # Checks if agent attempted to do an illegal action or bad action.
             penalties += 1

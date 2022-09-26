@@ -66,6 +66,7 @@ def obsToState(obs):
         steer += (i - 9) * deviation[i]
     steer = - np.tanh(steer * 4)
     steer = min(max(steer, -1.0), 1.0)
+    steer = pow(steer, 3)
     state = round(steer, 3) + 1  # To transform the deviation into the 201 state of the array
     state *= 100
     state = int(state)
@@ -101,6 +102,12 @@ for i in range(training_episodes):
         old_value = q_table[state, action] # Retrieve old value from the q-table.
         next_max = np.max(q_table[next_state])
 
+        if next_obs[0] < 20:
+            rew -= 10
+
+        if next_obs[0] > 200:
+            rew += 10
+
         # Update q-value for current state.
         new_value = (1 - alpha) * old_value + alpha * (rew + gamma * next_max)
         q_table[state, action] = new_value
@@ -109,6 +116,8 @@ for i in range(training_episodes):
         with open('{}.npy'.format(path), 'wb') as f:
             np.save(f, q_table)
 
+        if next_obs[0] < 20:
+            penalties += 1
 
         if rew == 0: # Checks if agent attempted to do an illegal action or bad action.
             penalties += 1
